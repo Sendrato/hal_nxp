@@ -1,0 +1,8 @@
+FWK                        version: 5.7.4
+                           Location: middleware/wireless/framework
+                           Description: Connectivity Framework middleware for
+                           Connectivity stacks
+                           License: Open Source - BSD-3-Clause
+                           Author: NXP
+                           name: Connectivity Framework
+                           Format: source code and header Files
