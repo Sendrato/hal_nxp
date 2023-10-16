@@ -8,7 +8,7 @@
  */
 
 #include "mcux_zephyr.h"
-#include <devicetree.h>
+#include <zephyr/devicetree.h>
 
 #if (defined(gSupportBle) && (gSupportBle == 1))
 

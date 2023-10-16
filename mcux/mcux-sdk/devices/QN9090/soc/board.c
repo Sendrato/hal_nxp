@@ -6,9 +6,8 @@
 */
 
 #include <fsl_power.h>
-#include <drivers/gpio.h>
-#include <devicetree.h>
-#include <drivers/pinmux.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/devicetree.h>
 
 #include "embeddedTypes.h"
 #include "psector_api.h"
@@ -16,7 +15,6 @@
 #include "RNG_Interface.h"
 #include "board.h"
 #include "fsl_adc.h"
-#include "device.h"
 #include "radio.h"
 
 #include "fsl_os_abstraction.h"

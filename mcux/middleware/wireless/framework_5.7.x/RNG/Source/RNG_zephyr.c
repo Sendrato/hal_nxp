@@ -15,8 +15,8 @@
 #include "RNG_Interface.h"
 #include "SecLib.h"
 
-#include <zephyr.h>
-#include <random/rand32.h>
+#include <zephyr/kernel.h>
+#include <zephyr/random/random.h>
 
 /*! *********************************************************************************
 *************************************************************************************

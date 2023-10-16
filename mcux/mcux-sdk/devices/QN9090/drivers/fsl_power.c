@@ -8,7 +8,7 @@
 #include "fsl_common.h"
 #include "fsl_power.h"
 //#include "fsl_debug_console.h"
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include "fsl_iocon.h"
 
 #include "rom_mpu.h"

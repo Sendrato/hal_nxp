@@ -18,6 +18,6 @@ zephyr_library_import(
 )
 
 if ((CONFIG_CODE_DATA_RELOCATION) AND ("${MCUX_DEVICE}" STREQUAL "QN9090"))
-    zephyr_code_relocate(config/controller_config.c SRAM1_BSS)
-    zephyr_code_relocate(${CMAKE_CURRENT_SOURCE_DIR}/lib/lib_ble_controller.a SRAM1_BSS)
+    zephyr_code_relocate(FILES config/controller_config.c LOCATION SRAM1_BSS)
+    zephyr_code_relocate(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/lib_ble_controller.a LOCATION SRAM1_BSS)
 endif()
