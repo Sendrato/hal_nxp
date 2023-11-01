@@ -9,7 +9,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/devicetree.h>
 
-#include "embeddedTypes.h"
+#include "EmbeddedTypes.h"
 #include "psector_api.h"
 #include "FunctionLib.h"
 #include "RNG_Interface.h"
