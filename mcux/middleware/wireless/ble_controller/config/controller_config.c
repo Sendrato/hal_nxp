@@ -604,8 +604,8 @@ void BLE_ControllerConfig(struct ble_config_st *cfg)
 #endif
 }
 
-#include <logging/log_ctrl.h>
-#include <logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(nxp_cconf, LOG_LEVEL_DBG);
 
 void BLE_initiated_reset(uint32_t error_code)

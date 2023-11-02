@@ -34,6 +34,4 @@
 #define gAppMaxConnections_c (CONFIG_BT_MAX_CONN)
 #endif
 
-#define CONFIG_USE_FIXED_MAC_ADDR 1
-
 #endif /* _MCUX_ZEPHYR_CONFIG_H_ */

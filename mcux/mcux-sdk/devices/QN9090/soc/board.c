@@ -6,17 +6,15 @@
 */
 
 #include <fsl_power.h>
-#include <drivers/gpio.h>
-#include <devicetree.h>
-#include <drivers/pinmux.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/devicetree.h>
 
-#include "embeddedTypes.h"
+#include "EmbeddedTypes.h"
 #include "psector_api.h"
 #include "FunctionLib.h"
 #include "RNG_Interface.h"
 #include "board.h"
 #include "fsl_adc.h"
-#include "device.h"
 #include "radio.h"
 
 #include "fsl_os_abstraction.h"
@@ -709,8 +707,13 @@ void BOARD_DisplayMCUUid(uint8_t mac_id[BLE_MACID_SZ])
 
 void BOARD_GetMCUUid(uint8_t* aOutUid16B, uint8_t* pOutLen)
 {
-#if defined(CONFIG_USE_FIXED_MAC_ADDR)
-    uint8_t mac_id[BD_ADDR_SIZE] = { 0xff, 0xaa, 0x02, 0x61, 0x04, 0x00 };
+#if defined(CONFIG_BT_NXP_FIXED_MAC_ADDR) && (CONFIG_BT_NXP_FIXED_MAC_ADDR != 0)
+    uint8_t mac_id[BD_ADDR_SIZE] = { ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 40) & 0xFF),
+                                     ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 32) & 0xFF),
+                                     ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 24) & 0xFF),
+                                     ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 16) & 0xFF),
+                                     ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 8) & 0xFF),
+                                     ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 0) & 0xFF) };
     *pOutLen = BD_ADDR_SIZE;
 
     FLib_MemCpy(aOutUid16B, mac_id, BD_ADDR_SIZE);

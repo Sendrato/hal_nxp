@@ -11,11 +11,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <kernel.h>
+#include <zephyr/kernel.h>
 
 #include "fsl_os_abstraction.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(nxp_osa, LOG_LEVEL_NONE);
 
 #define OSA_EVENT_MAX          (5)
