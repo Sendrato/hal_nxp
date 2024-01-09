@@ -654,6 +654,14 @@ bool POWER_EnterDeepSleepMode(pm_power_config_t *pm_power_config)
     /* [artf555998] Enable new ES2 feature for fast wakeup */
     PMC->CTRLNORST = PMC_CTRLNORST_FASTLDOENABLE_MASK;
 
+
+    LPC_LOWPOWER_T lp_config;
+
+    /* get lp_config */
+    POWER_GetDeepSleepConfig(pm_power_config, (void*)&lp_config);
+
+    POWER_GoToDeepSleep(&lp_config);
+
     return false;
 }
 
@@ -1013,9 +1021,10 @@ bool POWER_EnterPowerMode(pm_power_mode_t pm_power_mode, pm_power_config_t *pm_p
     bool ret;
     switch (pm_power_mode)
     {
-            /*  case PM_DEEP_SLEEP:
-                    ret = POWER_EnterDeepSleepMode(pm_power_config);
-                    break; */
+        //experimenteel
+        case PM_DEEP_SLEEP:
+            ret = POWER_EnterDeepSleepMode(pm_power_config);
+            break;
         case PM_POWER_DOWN:
             ret = POWER_EnterPowerDownMode(pm_power_config);
             break;
@@ -1156,3 +1165,244 @@ static void LF_DumpConfig(LPC_LOWPOWER_T *LV_LowPowerMode)
 }
 
 #endif
+
+
+void POWER_GoToDeepSleep( void* pm_config )
+{
+
+    //this may or may not be neccesary
+    LPC_LOWPOWER_T* lp_config = (LPC_LOWPOWER_T*)pm_config;
+
+    /* If flexcom is maintained, do not disable the console and the clocks - let the application do it if needed */
+    if (lp_config->DIGPWDN & LOWPOWER_DIGPWDN_COMM0)
+    {
+        /* remove console if not done */
+        DbgConsole_Deinit();
+
+        /* Disable clocks to FLEXCOM power domain. This power domain is not reseted on wakeup by HW */
+        POWER_FlexcomClocksDisable();
+    }
+
+    if ( (void*)power_hook_fn != NULL )
+    {
+        /* Call hook function */
+        (*power_hook_fn)();
+    }
+
+
+    Chip_LOWPOWER_SetLowPowerMode( lp_config );
+}
+
+void POWER_GetDeepSleepConfig(pm_power_config_t *pm_power_config, void* pm_config)
+{
+    int radio_retention;
+    int autostart_32mhz_xtal;
+    int keep_ao_voltage;
+    int sram_cfg;
+    int wakeup_src0;
+    int wakeup_src1;
+    uint8_t voltage_mem_down;
+    uint8_t voltage_membootst_down;
+
+    LPC_LOWPOWER_T* lp_config = (LPC_LOWPOWER_T*)pm_config;
+
+    memset(lp_config, 0, sizeof(LPC_LOWPOWER_T));
+
+    //wss configureerbaar omdat lichter dan power down, miss zelfs meer config opties los van deze?
+    sram_cfg             = pm_power_config->pm_config & PM_CFG_SRAM_ALL_RETENTION;
+    radio_retention      = pm_power_config->pm_config & PM_CFG_RADIO_RET;
+    autostart_32mhz_xtal = pm_power_config->pm_config & PM_CFG_XTAL32M_AUTOSTART;
+    keep_ao_voltage      = pm_power_config->pm_config & PM_CFG_KEEP_AO_VOLTAGE;
+
+    wakeup_src0 = (int)pm_power_config->pm_wakeup_src & 0xFFFFFFFF;
+    wakeup_src1 = (int)(pm_power_config->pm_wakeup_src >> 32) & 0xFFFFFFFF;
+
+
+    lp_config->CFG = LOWPOWER_CFG_MODE_DEEPSLEEP;
+
+    /* PDRUNCFG : on ES2, flag discard to keep the same configuration than active */
+    lp_config->CFG |= LOWPOWER_CFG_PDRUNCFG_DISCARD_MASK;
+
+    /* PDSLEEPCFG (note: LDOMEM will be enabled by lowpower API if one memory bank in retention*/
+    lp_config->PMUPWDN |= LOWPOWER_PMUPWDN_DCDC | LOWPOWER_PMUPWDN_BIAS | LOWPOWER_PMUPWDN_BODVBAT;
+
+    /* Disable All banks except those given in sram_cfg */
+    lp_config->DIGPWDN |= ((LOWPOWER_DIGPWDN_SRAM_ALL_MASK) & ~(sram_cfg << LOWPOWER_DIGPWDN_SRAM0_INDEX));
+
+    // TODO : if COMM0 is disabled, need to switch off the clocks also for safe wake up
+    lp_config->DIGPWDN |= LOWPOWER_DIGPWDN_COMM0; // PDSLEEP DISABLE COM0
+
+    lp_config->DIGPWDN |=
+            LOWPOWER_DIGPWDN_MCU_RET; // PDSLEEP DISABLE retention  : on ES1, CPU retention, on ES2 Zigbee retention
+
+    // lp_config->DIGPWDN |= LOWPOWER_DIGPWDN_NTAG_FD;         // DPDWKSRC DISABLE NTAG  - not used in lowpower API in
+    // power down
+
+    lp_config->SLEEPPOSTPONE = 0;
+    lp_config->GPIOLATCH     = 0;
+
+    /* A bit in the flash is now set (bit 31 at address 0x9FCD4).
+     * If this bit is set, RAM retention in sleep should use voltage of 0.9v.
+     * If it is not set, RAM retention in sleep should use voltage of 1.0v. */
+    if ( (*POWER_ULPGB_TRIM_FLASH_ADDR & 0x80000000) || FORCE_LDO_MEM_0V9_DBG)
+    {
+        /* exception if pwd_trim_val is 2 or above : POWER_APPLY_TRIM will cap the value to
+             VOLTAGE_MEM_DOWN_0_9V  (9) and the LDO output voltage will remain to 0.85v.
+              This is not enough if we consider device aging, so let s increase the
+              LDO voltage setting to 0.96v. In fact, 0.91v will be provided by the LDO */
+        if ( (pwd_trim_val != POWER_LDO_TRIM_UNDEFINED) && ( pwd_trim_val > 1)  )
+        {
+            voltage_mem_down       = VOLTAGE_MEM_DOWN_0_96V;
+            voltage_membootst_down = VOLTAGE_MEMBOOST_DOWN_0_9V;
+        }
+        else
+        {
+            /* Apply normal trimming,  note that trimming on voltage_mem_down will be capped
+                to 0x9 if pwd_trim_value == 1 , so it will be not trimmed correctly
+                but we don t expect any issue as it will still provide 0.875v real and boost will be equal
+                to 0.85v so no extra power consumption */
+            voltage_mem_down       = POWER_APPLY_TRIM(VOLTAGE_MEM_DOWN_0_9V);
+            voltage_membootst_down = POWER_APPLY_TRIM(VOLTAGE_MEMBOOST_DOWN_0_85V);
+        }
+    }
+    else
+    {
+        voltage_mem_down       = POWER_APPLY_TRIM(VOLTAGE_MEM_DOWN_1_0V);
+        voltage_membootst_down = POWER_APPLY_TRIM(VOLTAGE_MEMBOOST_DOWN_0_96V);
+    }
+
+    if (keep_ao_voltage)
+    {
+        LPC_LOWPOWER_LDOVOLTAGE_T ldo_voltage;
+
+        Chip_LOWPOWER_GetSystemVoltages(&ldo_voltage);
+
+        /* keep the same voltage than in active for the Always ON powerdomain */
+        lp_config->VOLTAGE = VOLTAGE(POWER_APPLY_TRIM(ldo_voltage.LDOPMU),
+                                     POWER_APPLY_TRIM(ldo_voltage.LDOPMUBOOST),
+                                     voltage_mem_down,
+                                     voltage_membootst_down,
+                                     0,
+                                     VOLTAGE_LDO_PMU_BOOST,
+                                     0);
+    }
+    else
+    {
+        lp_config->VOLTAGE = VOLTAGE(POWER_APPLY_TRIM(VOLTAGE_PMU_DOWN),
+                                     POWER_APPLY_TRIM(VOLTAGE_PMUBOOST_DOWN),
+                                     voltage_mem_down,
+                                     voltage_membootst_down, 0,
+                                     VOLTAGE_LDO_PMU_BOOST,
+                                     0);
+    }
+
+    lp_config->WAKEUPSRCINT0 = wakeup_src0;
+    lp_config->WAKEUPSRCINT1 = wakeup_src1;
+
+    /* Variation from reference */
+    if (radio_retention)
+    {
+        /* Enable Zigbee retention */
+        lp_config->DIGPWDN &= ~LOWPOWER_DIGPWDN_MCU_RET;
+    }
+
+    /* Configure IO wakeup source */
+    if (lp_config->WAKEUPSRCINT1 & LOWPOWER_WAKEUPSRCINT1_IO_IRQ)
+    {
+        lp_config->WAKEUPIOSRC = pm_power_config->pm_wakeup_io;
+    }
+
+    if (lp_config->WAKEUPSRCINT0 & LOWPOWER_WAKEUPSRCINT0_SYSTEM_IRQ)
+    {
+        /* Need to enable the BIAS for VBAT BOD */
+        lp_config->PMUPWDN &= ~(LOWPOWER_PMUPWDN_BIAS | LOWPOWER_PMUPWDN_BODVBAT);
+    }
+
+    if (lp_config->WAKEUPSRCINT0 &
+        (LOWPOWER_WAKEUPSRCINT0_USART0_IRQ | LOWPOWER_WAKEUPSRCINT0_I2C0_IRQ | LOWPOWER_WAKEUPSRCINT0_SPI0_IRQ))
+    {
+        /* Keep Flexcom0 in power down mode */
+        lp_config->DIGPWDN &= ~LOWPOWER_DIGPWDN_COMM0;
+    }
+
+    /* On ES2 , Analog comparator is already enabled in PDRUNCFG + RFT1877 : No need to keep the bias */
+    if (sram_cfg)
+    {
+        /* Configure the SRAM to SMB1 (low leakage biasing) */
+        SYSCON->SRAMCTRL =
+                (SYSCON->SRAMCTRL & (~SYSCON_SRAMCTRL_SMB_MASK)) | (SYSCON_SRAMCTRL_SMB(1) << SYSCON_SRAMCTRL_SMB_SHIFT);
+
+        /*
+         * BODMEM requires the bandgap enable in power down, this induces a power consumption increase of 1uA
+         * so Enable BODMEM only if bandgap is already enabled for BODVBAT (see code above)
+         */
+#ifndef POWER_FORCE_BODMEM_IN_PD
+        if ((lp_config->PMUPWDN & LOWPOWER_PMUPWDN_BIAS) == 0)
+#endif
+        {
+#ifdef FOR_BOD_DEBUG
+            CLOCK_EnableClock(kCLOCK_AnaInt);
+
+            /* Note: BODMEM should be already enabled in the POWER_Init() function but do it again if not */
+            if (!(PMC->PDRUNCFG & PMC_PDRUNCFG_ENA_BOD_MEM_MASK))
+            {
+                POWER_BodMemSetup();
+                /* This time, need to wait for LDO to be set up (27us) */
+                CLOCK_uDelay(27);
+            }
+            POWER_BodMemEnableInt();
+#endif
+        }
+#ifndef POWER_FORCE_BODMEM_IN_PD
+        else
+        {
+#ifdef FOR_BOD_DEBUG
+            /* Disable the BODMEM otherwise */
+            POWER_BodMemDisable();
+#endif
+        }
+#endif
+    }
+    else
+    {
+#ifdef FOR_BOD_DEBUG
+        /* Disable the BODMEM otherwise */
+        POWER_BodMemDisable();
+#endif
+    }
+#ifdef FOR_BOD_DEBUG
+    /* Disable BodCore , no longer used in power down */
+    POWER_BodCoreDisable();
+#endif
+    if (wakeup_src0 & LOWPOWER_WAKEUPSRCINT0_NFCTAG_IRQ)
+    {
+        lp_config->WAKEUPSRCINT1 |= LOWPOWER_WAKEUPSRCINT1_IO_IRQ;
+        lp_config->WAKEUPIOSRC |= LOWPOWER_WAKEUPIOSRC_NTAG_FD;
+    }
+
+    /* On Power down, NTAG field detect is enabled by IO so don t need to set the LOWPOWER_DIGPWDN_NTAG_FD */
+    // lp_config->DIGPWDN &= ~LOWPOWER_DIGPWDN_NTAG_FD;      // used for deep down only
+
+    if (autostart_32mhz_xtal)
+    {
+        lp_config->CFG |= LOWPOWER_CFG_XTAL32MSTARTENA_MASK;
+    }
+
+    /* get IO clamping state already set by the application and give it to lowpower API
+     * Lowpower API overrides the IO configuration with GPIOLATCH setting
+     */
+    lp_config->GPIOLATCH = POWER_GetIoClampConfig();
+
+    /* [RFT1911] Disable the DC bus to prevent extra consumption */
+#ifndef POWER_DCBUS_NOT_DISABLED
+    ASYNC_SYSCON->DCBUSCTRL =
+            (ASYNC_SYSCON->DCBUSCTRL & ~ASYNC_SYSCON_DCBUSCTRL_ADDR_MASK) | (1 << ASYNC_SYSCON_DCBUSCTRL_ADDR_SHIFT);
+#endif
+
+    /* [artf555998] Enable new ES2 feature for fast wakeup */
+    PMC->CTRLNORST = PMC_CTRLNORST_FASTLDOENABLE_MASK;
+
+#ifdef DUMP_CONFIG
+    LF_DumpConfig(&lp_config);
+#endif
+}

@@ -420,6 +420,12 @@ void POWER_SetDcdc1v3(void);
  */
 void POWER_SetDcdc1v8(void);
 
+//new
+void POWER_GetDeepSleepConfig(pm_power_config_t *pm_power_config, void* pm_config);
+
+//new
+void POWER_GoToDeepSleep(void* pm_config);
+
 /* @} */
 
 #ifdef __cplusplus
