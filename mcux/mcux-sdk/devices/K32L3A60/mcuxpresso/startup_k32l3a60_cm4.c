@@ -232,7 +232,6 @@ extern void _vStackTop(void);
 //*****************************************************************************
 
 
-
 extern void (* const g_pfnVectors[])(void);
 extern void * __Vectors __attribute__ ((alias ("g_pfnVectors")));
 

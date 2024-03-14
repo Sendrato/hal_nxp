@@ -101,6 +101,13 @@ void WTIMER_DeInit(void);
  */
 void WTIMER_EnableInterrupts(WTIMER_timer_id_t timer_id);
 
+/*!
+ * @brief Disable the selected Timer interrupts.
+ *
+ * @param timer_id   Wtimer Id
+ */
+void WTIMER_DisableInterrupts(WTIMER_timer_id_t timer_id);
+
 #ifdef NOT_IMPLEMENTED_YET
 /*!
  * @brief Disable the selected Timer interrupts.
@@ -118,6 +125,8 @@ void WTIMER_DisableInterrupts(WTIMER_timer_id_t timer_id);
  *
  * @return The status flags.
  */
+
+
 WTIMER_status_t WTIMER_GetStatusFlags(WTIMER_timer_id_t timer_id);
 
 /*!

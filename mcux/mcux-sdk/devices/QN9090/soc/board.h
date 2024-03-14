@@ -67,6 +67,7 @@
 #define APP_SERIAL_INTERFACE_SPEED      (115200U)
 #endif
 
+#define BOARD_SW1_GPIO_PIN (1U)
 
 #define IOCON_QSPI_MODE_FUNC        (7U)
 

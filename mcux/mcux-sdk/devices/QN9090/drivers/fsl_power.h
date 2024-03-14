@@ -164,7 +164,8 @@ typedef enum pd_bits
  * @brief  Power modes
  */
 typedef enum {
-    /* PM_DEEP_SLEEP, */
+    PM_SLEEP,
+    PM_DEEP_SLEEP,
     PM_POWER_DOWN,  /*!< Power down mode */
     PM_DEEP_DOWN,   /*!< Deep power down mode */
 } pm_power_mode_t ;
@@ -214,6 +215,14 @@ extern "C" {
 * @name Power Configuration
 * @{
 */
+
+/*!
+ * @brief get clamped IO configs
+ *
+ * @return which IO's are clamped
+ */
+
+uint32_t POWER_GetIoClampConfig(void);
 
 /*!
  * @brief Initialize the sdk power drivers
@@ -406,6 +415,10 @@ void POWER_ApplyLdoActiveVoltage(pm_ldo_volt_t ldoVolt);
 void POWER_ApplyLdoActiveVoltage_1V1(void);
 void POWER_ApplyLdoActiveVoltage_1V0(void);
 
+static void (*power_hook_fn)();
+
+bool POWER_EnterDeepDownMode(pm_power_config_t *pm_power_config);
+
 /*!
  * @brief brief Set the DCDC output to 1.3v
  *
@@ -420,13 +433,98 @@ void POWER_SetDcdc1v3(void);
  */
 void POWER_SetDcdc1v8(void);
 
-//new
+/* additions start here*/
+
+/*!
+ * brief Function for managing configs and putting system to sleep
+ *
+ * param *bpm_power_config containing configuration structure
+ *
+ * return true
+ */
+
+
+/*beginning additions*/
+
+/*!
+ * brief Function for restoring cpu context
+ *
+ * return none
+ */
+
+void GO_JUMP(void);
+
+/*!
+ * brief Function for managing configs and putting system to power down
+ *
+ * param *bpm_power_config containing configuration structure
+ * return true
+ */
+
+bool POWER_EnterPowerDownMode(pm_power_config_t *pm_power_config);
+
+/*!
+ * brief Function for managing configs and putting system to deep sleep
+ *
+ * param *bpm_power_config containing configuration structure
+ * return true
+ */
+
+bool POWER_EnterDeepSleepMode(pm_power_config_t *pm_power_config);
+
+/*!
+ * brief Function for converting user-specified configs to config structure usable by power management API in ROM.
+ *
+ * param *pm_power_config struct containing user-specified configs
+ * param *pm_config struct containing converted configs
+ *
+ * return none
+ */
+
 void POWER_GetDeepSleepConfig(pm_power_config_t *pm_power_config, void* pm_config);
 
-//new
-void POWER_GoToDeepSleep(void* pm_config);
+/*!
+ * brief Function for passing configuration structure to ROM API which puts system into sleep.
+ *
+ * param *pm_config struct containing converted configs
+ *
+ * return none
+ */
+
+void POWER_GoToDeepSleep( void* pm_config );
+
+/*!
+ * courtesy of PWR_vColdStart in PWC.c in mcux library
+ *
+ * brief Function for resetting the wakeup timer.
+ *
+ * return none
+ */
+
+void reset_wkt(void);
+
+/*!
+ * brief Function for initializing wakeup timer 0.
+ *
+ * param duration in seconds after which wakeup timer will fire
+ *
+ * return none
+ */
+
+void init_config_timer(double time_s);
+
+/*!
+ * brief Function uninitializing wakeup timer 0
+ *
+ * return none
+ */
+
+void deinit_config_timer(void);
+
 
 /* @} */
+
+
 
 #ifdef __cplusplus
 }

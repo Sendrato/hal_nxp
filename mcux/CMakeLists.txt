@@ -76,6 +76,7 @@ zephyr_compile_definitions(${MCUX_CPU})
 zephyr_library_sources(mcux-sdk/devices/${MCUX_DEVICE}/drivers/fsl_clock.c)
 if (${MCUX_DEVICE} MATCHES "LPC|MIMXRT6|MIMXRT5|QN")
   zephyr_library_sources(mcux-sdk/devices/${MCUX_DEVICE}/drivers/fsl_power.c)
+  zephyr_library_sources(mcux-sdk/devices/${MCUX_DEVICE}/drivers/fsl_power_expanded.c)
   zephyr_library_sources(mcux-sdk/devices/${MCUX_DEVICE}/drivers/fsl_reset.c)
 endif()
 

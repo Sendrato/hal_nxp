@@ -171,6 +171,14 @@ void WTIMER_EnableInterrupts(WTIMER_timer_id_t timer_id)
     SYSCON->WKT_INTENSET = timer_param_l->wkt_intenclr_timeout_mask;
 }
 
+void WTIMER_DisableInterrupts(WTIMER_timer_id_t timer_id)
+{
+    const timer_param_t *timer_param_l = &timer_param[timer_id];
+
+    DisableIRQ((IRQn_Type)timer_param_l->wkt_irq_id);
+    SYSCON->WKT_INTENCLR = timer_param_l->wkt_intenclr_timeout_mask;
+}
+
 static void WTIMER_StartTimerFunction(WTIMER_timer_id_t timer_id, uint64_t count, bool fast)
 {
     const timer_param_t *timer_param_l = &timer_param[timer_id];
