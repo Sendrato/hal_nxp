@@ -196,9 +196,15 @@ bool POWER_EnterPowerMode(pm_power_mode_t pm_power_mode, pm_power_config_t *pm_p
   case PM_DEEP_SLEEP:
     ret = POWER_EnterDeepSleepMode(pm_power_config);
     break;
-  case PM_POWER_DOWN:
-    ret = POWER_EnterPowerDownMode(pm_power_config);
-    break;
+
+    /*
+     * This mode is not ready yet for a zephyr implementation.
+     *
+     *case PM_POWER_DOWN:
+     *ret = POWER_EnterPowerDownMode(pm_power_config);
+     *break;
+     */
+
   case PM_DEEP_DOWN:
     ret = POWER_EnterDeepDownMode(pm_power_config);
     break;
