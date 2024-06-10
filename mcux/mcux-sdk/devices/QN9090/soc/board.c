@@ -8,6 +8,7 @@
 #include <fsl_power.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/devicetree.h>
+#include <zephyr/random/random.h>
 
 #include "EmbeddedTypes.h"
 #include "psector_api.h"
@@ -714,6 +715,14 @@ void BOARD_GetMCUUid(uint8_t* aOutUid16B, uint8_t* pOutLen)
                                      ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 16) & 0xFF),
                                      ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 8) & 0xFF),
                                      ((CONFIG_BT_NXP_FIXED_MAC_ADDR >> 0) & 0xFF) };
+    *pOutLen = BD_ADDR_SIZE;
+
+    FLib_MemCpy(aOutUid16B, mac_id, BD_ADDR_SIZE);
+#elif defined(CONFIG_BT_NXP_RANDOM_MAC_ADDR)
+    uint8_t mac_id[BD_ADDR_SIZE] = {
+        (sys_rand32_get() & 0xFF), (sys_rand32_get() & 0xFF),
+        (sys_rand32_get() & 0xFF), (sys_rand32_get() & 0xFF),
+        (sys_rand32_get() & 0xFF), (sys_rand32_get() & 0xFF)};
     *pOutLen = BD_ADDR_SIZE;
 
     FLib_MemCpy(aOutUid16B, mac_id, BD_ADDR_SIZE);
