@@ -1196,6 +1196,8 @@ void CLOCK_SetXtal32M_LDO(void)
 void CLOCK_Xtal32M_WaitUntilStable(uint32_t u32AdditionalWait_us)
 {
     /* Spin until XO stable flag is set */
+    /*FIXME: This can cause issues on reboot*/
+
     while ((ASYNC_SYSCON->RADIOSTATUS & ASYNC_SYSCON_RADIOSTATUS_PLLXOREADY_MASK) == 0)
     {
     }

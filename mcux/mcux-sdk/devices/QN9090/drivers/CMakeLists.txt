@@ -51,6 +51,8 @@ zephyr_library_sources(psector_api.c)
 # sha is used by BLE framework
 zephyr_library_sources_ifdef(CONFIG_BT_NXP_IPM			fsl_sha.c)
 
+#zephyr_library_sources(PWR_setjmp.S)
+
 if(NOT CONFIG_ASSERT OR CONFIG_FORCE_NO_ASSERT)
   zephyr_compile_definitions(NDEBUG) # squelch fsl_flexcan.c warning
 endif()

@@ -14,6 +14,7 @@
 #include "rom_pmc.h"
 #include "rom_api.h"
 #include "rom_lowpower.h"
+
 /* Component ID definition, used by tools. */
 #ifndef FSL_COMPONENT_ID
 #define FSL_COMPONENT_ID "platform.drivers.power_no_lib"
@@ -130,37 +131,37 @@
  * Types
  ******************************************************************************/
 static LPC_LOWPOWER_LDOVOLTAGE_T lowpower_ldovoltage_reset = {
-    .LDOPMU             = 0x18, // 1.1V
-    .LDOPMUBOOST        = 0x13, // 1.05V
-    .LDOMEM             = 0x18, // 1.1V
-    .LDOMEMBOOST        = 0x13, // 1.05V
-    .LDOCORE            = 0x5,  // 1.1V
-    .LDOFLASHNV         = 0x5,  // 1.9V
+        .LDOPMU             = 0x18, // 1.1V
+        .LDOPMUBOOST        = 0x13, // 1.05V
+        .LDOMEM             = 0x18, // 1.1V
+        .LDOMEMBOOST        = 0x13, // 1.05V
+        .LDOCORE            = 0x5,  // 1.1V
+        .LDOFLASHNV         = 0x5,  // 1.9V
 #if defined(gPWR_LdoFlashOptim) && (gPWR_LdoFlashOptim > 0)
-    .LDOFLASHCORE       = 0x5,  // 1.10V
+        .LDOFLASHCORE       = 0x5,  // 1.10V
 #else
-    .LDOFLASHCORE       = 0x6,  // 1.15V
+        .LDOFLASHCORE       = 0x6,  // 1.15V
 #endif
-    .LDOADC             = 0x5,  // 1.1V
-    .LDOPMUBOOST_ENABLE = 1,    // Force Boost activation on LDOPMU
+        .LDOADC             = 0x5,  // 1.1V
+        .LDOPMUBOOST_ENABLE = 1,    // Force Boost activation on LDOPMU
 };
 
 static LPC_LOWPOWER_LDOVOLTAGE_T lowpower_ldovoltage_min = {
-    .LDOPMU             = 0xE, // 1V
-    .LDOPMUBOOST        = 0xA, // 0.96V
-    .LDOMEM             = 0xE, // 1V
-    .LDOMEMBOOST        = 0xA, // 0.96V
-    .LDOCORE            = 0x3, // 1V
-    .LDOFLASHNV         = 0x5, // 1.9V
+        .LDOPMU             = 0xE, // 1V
+        .LDOPMUBOOST        = 0xA, // 0.96V
+        .LDOMEM             = 0xE, // 1V
+        .LDOMEMBOOST        = 0xA, // 0.96V
+        .LDOCORE            = 0x3, // 1V
+        .LDOFLASHNV         = 0x5, // 1.9V
 #if defined(gPWR_LdoFlashOptim) && (gPWR_LdoFlashOptim == 2)
-    .LDOFLASHCORE       = 0x3,  // 1V
+        .LDOFLASHCORE       = 0x3,  // 1V
 #elif defined(gPWR_LdoFlashOptim) && (gPWR_LdoFlashOptim == 1)
-    .LDOFLASHCORE       = 0x5,  // 1.1V
+        .LDOFLASHCORE       = 0x5,  // 1.1V
 #else
-    .LDOFLASHCORE       = 0x6,  // 1.15V
+        .LDOFLASHCORE       = 0x6,  // 1.15V
 #endif
-    .LDOADC             = 0x5, // 1.1V
-    .LDOPMUBOOST_ENABLE = 1,   // Force Boost activation on LDOPMU
+        .LDOADC             = 0x5, // 1.1V
+        .LDOPMUBOOST_ENABLE = 1,   // Force Boost activation on LDOPMU
 };
 
 /* trimming value to apply to active/pwd voltage - Initialized from flash in POWER_Init() */
@@ -282,11 +283,11 @@ static void POWER_UpdateTrimmingVoltageValue(void)
         pwd_trim_val         = POWER_GET_PWD_TRIM_VALUE(ulpbg_trim_flash_val);
     }
 #ifdef DUMP_CONFIG
-    //PRINTF("reg=0x%x active_trim=0x%X pwd_trim=0x%X\r\n", ulpbg_trim_flash_val, active_trim_val, pwd_trim_val);
+    PRINTF("reg=0x%x active_trim=0x%X pwd_trim=0x%X\r\n", ulpbg_trim_flash_val, active_trim_val, pwd_trim_val);
 #endif
 }
 
-static uint32_t POWER_GetIoClampConfig(void)
+uint32_t POWER_GetIoClampConfig(void)
 {
     uint32_t io_clamp = 0;
 
@@ -375,25 +376,27 @@ void POWER_ClearResetCause(void)
     pmc_reset_clear_cause(0xFFFFFFFF);
 }
 
-void POWER_DisplayActiveVoltage(void)
+/*Shouldn't be used since zephyr kernel handles prints, but can be used for inspiration*
+
+/*void POWER_DisplayActiveVoltage(void)
 {
     LPC_LOWPOWER_LDOVOLTAGE_T ldo_voltage;
 
     Chip_LOWPOWER_GetSystemVoltages(&ldo_voltage);
 
-    //PRINTF("LDOPMU       : %d\n", (int)(ldo_voltage.LDOPMU & 0x1fUL));
-    //PRINTF("LDOPMUBOOST  : %d\n", (int)(ldo_voltage.LDOPMUBOOST & 0x1fUL));
-    //PRINTF("LDOMEM       : %d\n", (int)(ldo_voltage.LDOMEM & 0x1fUL));
-    //PRINTF("LDOMEMBOOST  : %d\n", (int)(ldo_voltage.LDOMEMBOOST & 0x1fUL));
-    //PRINTF("LDOCORE      : %d\n", (int)(ldo_voltage.LDOCORE & 0x07UL));
-    //PRINTF("LDOFLASHCORE : %d\n", (int)(ldo_voltage.LDOFLASHCORE & 0x07UL));
-    //PRINTF("LDOFLASHNV   : %d\n", (int)(ldo_voltage.LDOFLASHNV & 0x07UL));
-    //PRINTF("LDOADC       : %d\n", (int)(ldo_voltage.LDOADC & 0x07UL));
+    PRINTF("LDOPMU       : %d\n", (int)(ldo_voltage.LDOPMU & 0x1fUL));
+    PRINTF("LDOPMUBOOST  : %d\n", (int)(ldo_voltage.LDOPMUBOOST & 0x1fUL));
+    PRINTF("LDOMEM       : %d\n", (int)(ldo_voltage.LDOMEM & 0x1fUL));
+    PRINTF("LDOMEMBOOST  : %d\n", (int)(ldo_voltage.LDOMEMBOOST & 0x1fUL));
+    PRINTF("LDOCORE      : %d\n", (int)(ldo_voltage.LDOCORE & 0x07UL));
+    PRINTF("LDOFLASHCORE : %d\n", (int)(ldo_voltage.LDOFLASHCORE & 0x07UL));
+    PRINTF("LDOFLASHNV   : %d\n", (int)(ldo_voltage.LDOFLASHNV & 0x07UL));
+    PRINTF("LDOADC       : %d\n", (int)(ldo_voltage.LDOADC & 0x07UL));
 
-    //PRINTF("LDOPMUBOOST_ENABLE : %d\n", ldo_voltage.LDOPMUBOOST_ENABLE);
+    PRINTF("LDOPMUBOOST_ENABLE : %d\n", ldo_voltage.LDOPMUBOOST_ENABLE);
 
-    //PRINTF("\n");
-}
+    PRINTF("\n");
+}*/
 
 void POWER_ApplyActiveVoltage(const LPC_LOWPOWER_LDOVOLTAGE_T *ldo_voltage)
 {
@@ -637,24 +640,10 @@ bool POWER_BodVbatConfig(pm_bod_cfg_t *bod_cfg_p)
 #endif
     }
 
-    // //PRINTF( "BODVBAT=0x%X ANACTRL_CTRL=0x%X _STAT=0x%X _VAL=0x%X _INTENSET=0x%X\n", PMC->BODVBAT,
-    // SYSCON->ANACTRL_CTRL, SYSCON->ANACTRL_STAT, SYSCON->ANACTRL_VAL, SYSCON->ANACTRL_INTENSET);
+    /*PRINTF( "BODVBAT=0x%X ANACTRL_CTRL=0x%X _STAT=0x%X _VAL=0x%X _INTENSET=0x%X\n", PMC->BODVBAT,
+    SYSCON->ANACTRL_CTRL, SYSCON->ANACTRL_STAT, SYSCON->ANACTRL_VAL, SYSCON->ANACTRL_INTENSET);*/
 
     return true;
-}
-
-bool POWER_EnterDeepSleepMode(pm_power_config_t *pm_power_config)
-{
-    /* [RFT1911] Disable the DC bus to prevent extra consumption */
-#ifndef POWER_DCBUS_NOT_DISABLED
-    ASYNC_SYSCON->DCBUSCTRL =
-        (ASYNC_SYSCON->DCBUSCTRL & ~ASYNC_SYSCON_DCBUSCTRL_ADDR_MASK) | (1 << ASYNC_SYSCON_DCBUSCTRL_ADDR_SHIFT);
-#endif
-
-    /* [artf555998] Enable new ES2 feature for fast wakeup */
-    PMC->CTRLNORST = PMC_CTRLNORST_FASTLDOENABLE_MASK;
-
-    return false;
 }
 
 
@@ -681,11 +670,11 @@ void POWER_GetPowerDownConfig(pm_power_config_t *pm_power_config, void* pm_confi
     wakeup_src0 = (int)pm_power_config->pm_wakeup_src & 0xFFFFFFFF;
     wakeup_src1 = (int)(pm_power_config->pm_wakeup_src >> 32) & 0xFFFFFFFF;
 #ifdef TRACE_VRB
-    //PRINTF("POWER_EnterPowerDownMode:\n");
-    //PRINTF("  wakeup_src0      : 0x%x\n", wakeup_src0);
-    //PRINTF("  wakeup_src1      : 0x%x\n", wakeup_src1);
-    //PRINTF("  wakeup_io        : 0x%x\n", pm_power_config->pm_wakeup_io);
-    //PRINTF("  pm_config        : 0x%x\n", pm_power_config->pm_config);
+    PRINTF("POWER_EnterPowerDownMode:\n");
+    PRINTF("  wakeup_src0      : 0x%x\n", wakeup_src0);
+    PRINTF("  wakeup_src1      : 0x%x\n", wakeup_src1);
+    PRINTF("  wakeup_io        : 0x%x\n", pm_power_config->pm_wakeup_io);
+    PRINTF("  pm_config        : 0x%x\n", pm_power_config->pm_config);
 #endif
 
     lp_config->CFG = LOWPOWER_CFG_MODE_POWERDOWN;
@@ -703,7 +692,7 @@ void POWER_GetPowerDownConfig(pm_power_config_t *pm_power_config, void* pm_confi
     lp_config->DIGPWDN |= LOWPOWER_DIGPWDN_COMM0; // PDSLEEP DISABLE COM0
 
     lp_config->DIGPWDN |=
-        LOWPOWER_DIGPWDN_MCU_RET; // PDSLEEP DISABLE retention  : on ES1, CPU retention, on ES2 Zigbee retention
+            LOWPOWER_DIGPWDN_MCU_RET; // PDSLEEP DISABLE retention  : on ES1, CPU retention, on ES2 Zigbee retention
 
     // lp_config->DIGPWDN |= LOWPOWER_DIGPWDN_NTAG_FD;         // DPDWKSRC DISABLE NTAG  - not used in lowpower API in
     // power down
@@ -800,7 +789,7 @@ void POWER_GetPowerDownConfig(pm_power_config_t *pm_power_config, void* pm_confi
     {
         /* Configure the SRAM to SMB1 (low leakage biasing) */
         SYSCON->SRAMCTRL =
-            (SYSCON->SRAMCTRL & (~SYSCON_SRAMCTRL_SMB_MASK)) | (SYSCON_SRAMCTRL_SMB(1) << SYSCON_SRAMCTRL_SMB_SHIFT);
+                (SYSCON->SRAMCTRL & (~SYSCON_SRAMCTRL_SMB_MASK)) | (SYSCON_SRAMCTRL_SMB(1) << SYSCON_SRAMCTRL_SMB_SHIFT);
 
         /*
          * BODMEM requires the bandgap enable in power down, this induces a power consumption increase of 1uA
@@ -866,7 +855,7 @@ void POWER_GetPowerDownConfig(pm_power_config_t *pm_power_config, void* pm_confi
     /* [RFT1911] Disable the DC bus to prevent extra consumption */
 #ifndef POWER_DCBUS_NOT_DISABLED
     ASYNC_SYSCON->DCBUSCTRL =
-        (ASYNC_SYSCON->DCBUSCTRL & ~ASYNC_SYSCON_DCBUSCTRL_ADDR_MASK) | (1 << ASYNC_SYSCON_DCBUSCTRL_ADDR_SHIFT);
+            (ASYNC_SYSCON->DCBUSCTRL & ~ASYNC_SYSCON_DCBUSCTRL_ADDR_MASK) | (1 << ASYNC_SYSCON_DCBUSCTRL_ADDR_SHIFT);
 #endif
 
     /* [artf555998] Enable new ES2 feature for fast wakeup */
@@ -895,7 +884,7 @@ void POWER_GoToPowerDown( void* pm_config )
 
     if ( (void*)power_hook_fn != NULL )
     {
-         /* Call hook function */
+        /* Call hook function */
         (*power_hook_fn)();
     }
 
@@ -909,16 +898,16 @@ void POWER_RegisterPowerDownEntryHookFunction( void (*pm_hook_function)() )
     power_hook_fn = pm_hook_function;
 }
 
-bool POWER_EnterPowerDownMode(pm_power_config_t *pm_power_config)
+__weak bool POWER_EnterPowerDownMode(pm_power_config_t *pm_power_config)
 {
-   LPC_LOWPOWER_T lp_config;
+    LPC_LOWPOWER_T lp_config;
 
-   /* get lp_config */
-   POWER_GetPowerDownConfig(pm_power_config, (void*)&lp_config);
+    /* get lp_config */
+    POWER_GetPowerDownConfig(pm_power_config, (void*)&lp_config);
 
-   POWER_GoToPowerDown(&lp_config);
+    POWER_GoToPowerDown(&lp_config);
 
-   return false;
+    return false;
 }
 
 
@@ -937,9 +926,9 @@ bool POWER_EnterDeepDownMode(pm_power_config_t *pm_power_config)
     wakeup_src1 = (int)(pm_power_config->pm_wakeup_src >> 32) & 0xFFFFFFFF;
 
 #ifdef TRACE_VRB
-    //PRINTF("POWER_EnterDeepDownMode:\n");
-    //PRINTF("  wakeup_src0      : 0x%x\n", wakeup_src0);
-    //PRINTF("  wakeup_src1      : 0x%x\n", wakeup_src1);
+    PRINTF("POWER_EnterDeepDownMode:\n");
+    PRINTF("  wakeup_src0      : 0x%x\n", wakeup_src0);
+    PRINTF("  wakeup_src1      : 0x%x\n", wakeup_src1);
 #else
     (void)wakeup_src0;
 #endif
@@ -974,10 +963,10 @@ bool POWER_EnterDeepDownMode(pm_power_config_t *pm_power_config)
         lp_config.CFG |= LOWPOWER_CFG_XTAL32MSTARTENA_MASK;
     }
 
-    /* [RFT1911] Disable the DC bus to prevent extra consumption */
+        /* [RFT1911] Disable the DC bus to prevent extra consumption */
 #ifndef POWER_DCBUS_NOT_DISABLED
     ASYNC_SYSCON->DCBUSCTRL =
-        (ASYNC_SYSCON->DCBUSCTRL & ~ASYNC_SYSCON_DCBUSCTRL_ADDR_MASK) | (1 << ASYNC_SYSCON_DCBUSCTRL_ADDR_SHIFT);
+            (ASYNC_SYSCON->DCBUSCTRL & ~ASYNC_SYSCON_DCBUSCTRL_ADDR_MASK) | (1 << ASYNC_SYSCON_DCBUSCTRL_ADDR_SHIFT);
 #endif
 
     /* [artf555998] Enable new ES2 feature for fast wakeup */
@@ -1007,23 +996,20 @@ bool POWER_EnterDeepDownMode(pm_power_config_t *pm_power_config)
  * will be set
  *
  * return false if chip could not go to sleep. Configuration structure is incorrect
+ *
+ * Updated to include PM_DEEP_SLEEP
  */
-bool POWER_EnterPowerMode(pm_power_mode_t pm_power_mode, pm_power_config_t *pm_power_config)
+__weak bool POWER_EnterPowerMode(pm_power_mode_t pm_power_mode, pm_power_config_t *pm_power_config)
 {
     bool ret;
     switch (pm_power_mode)
     {
-            /*  case PM_DEEP_SLEEP:
-                    ret = POWER_EnterDeepSleepMode(pm_power_config);
-                    break; */
         case PM_POWER_DOWN:
             ret = POWER_EnterPowerDownMode(pm_power_config);
             break;
         case PM_DEEP_DOWN:
             ret = POWER_EnterDeepDownMode(pm_power_config);
             break;
-        default:
-            ret = false;
     }
 
     return ret;
@@ -1137,22 +1123,23 @@ void POWER_SetDcdc1v3(void)
 #ifdef DUMP_CONFIG
 static void LF_DumpConfig(LPC_LOWPOWER_T *LV_LowPowerMode)
 {
-    //PRINTF("Powerdown configuration\n");
-    //PRINTF("CFG:             0x%x\n", LV_LowPowerMode->CFG);
-    //PRINTF("PMUPWDN:         0x%x\n", LV_LowPowerMode->PMUPWDN);
-    //PRINTF("DIGPWDN:         0x%x\n", LV_LowPowerMode->DIGPWDN);
-    //PRINTF("VOLTAGE:         0x%x\n", LV_LowPowerMode->VOLTAGE);
-    //PRINTF("WAKEUPSRCINT0:   0x%x\n", LV_LowPowerMode->WAKEUPSRCINT0);
-    //PRINTF("WAKEUPSRCINT1:   0x%x\n", LV_LowPowerMode->WAKEUPSRCINT1);
-    //PRINTF("SLEEPPOSTPONE:   0x%x\n", LV_LowPowerMode->SLEEPPOSTPONE);
-    //PRINTF("WAKEUPIOSRC      0x%x\n", LV_LowPowerMode->WAKEUPIOSRC);
-    //PRINTF("GPIOLATCH        0x%x\n", LV_LowPowerMode->GPIOLATCH);
-    //PRINTF("TIMERCFG         0x%x\n", LV_LowPowerMode->TIMERCFG);
-    //PRINTF("TIMERBLECFG      0x%x\n", LV_LowPowerMode->TIMERBLECFG);
-    //PRINTF("TIMERCOUNTLSB    0x%x\n", LV_LowPowerMode->TIMERCOUNTLSB);
-    //PRINTF("TIMERCOUNTMSB    0x%x\n", LV_LowPowerMode->TIMERCOUNTMSB);
-    //PRINTF("TIMER2NDCOUNTLSB 0x%x\n", LV_LowPowerMode->TIMER2NDCOUNTLSB);
-    //PRINTF("TIMER2NDCOUNTMSB 0x%x\n", LV_LowPowerMode->TIMER2NDCOUNTMSB);
+    PRINTF("Powerdown configuration\n");
+    PRINTF("CFG:             0x%x\n", LV_LowPowerMode->CFG);
+    PRINTF("PMUPWDN:         0x%x\n", LV_LowPowerMode->PMUPWDN);
+    PRINTF("DIGPWDN:         0x%x\n", LV_LowPowerMode->DIGPWDN);
+    PRINTF("VOLTAGE:         0x%x\n", LV_LowPowerMode->VOLTAGE);
+    PRINTF("WAKEUPSRCINT0:   0x%x\n", LV_LowPowerMode->WAKEUPSRCINT0);
+    PRINTF("WAKEUPSRCINT1:   0x%x\n", LV_LowPowerMode->WAKEUPSRCINT1);
+    PRINTF("SLEEPPOSTPONE:   0x%x\n", LV_LowPowerMode->SLEEPPOSTPONE);
+    PRINTF("WAKEUPIOSRC      0x%x\n", LV_LowPowerMode->WAKEUPIOSRC);
+    PRINTF("GPIOLATCH        0x%x\n", LV_LowPowerMode->GPIOLATCH);
+    PRINTF("TIMERCFG         0x%x\n", LV_LowPowerMode->TIMERCFG);
+    PRINTF("TIMERBLECFG      0x%x\n", LV_LowPowerMode->TIMERBLECFG);
+    PRINTF("TIMERCOUNTLSB    0x%x\n", LV_LowPowerMode->TIMERCOUNTLSB);
+    PRINTF("TIMERCOUNTMSB    0x%x\n", LV_LowPowerMode->TIMERCOUNTMSB);
+    PRINTF("TIMER2NDCOUNTLSB 0x%x\n", LV_LowPowerMode->TIMER2NDCOUNTLSB);
+    PRINTF("TIMER2NDCOUNTMSB 0x%x\n", LV_LowPowerMode->TIMER2NDCOUNTMSB);
 }
 
 #endif
+
