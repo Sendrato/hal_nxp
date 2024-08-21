@@ -184,8 +184,8 @@
                          BIT(IOCON_DBG_PIN+2)|BIT(IOCON_DBG_PIN+3)|\
                          BIT(IOCON_DBG_PIN+4))
 
-#define IODBG_SET_MASK(mask)   ((GPIO_Type *)GPIO_BASE)->SET[0] = mask
-#define IODBG_CLR_MASK(mask)   ((GPIO_Type *)GPIO_BASE)->CLR[0] = mask
+#define IODBG_SET_MASK(mask)   ((GPIO_Type *)GPIO_BASE_MCUX)->SET[0] = mask
+#define IODBG_CLR_MASK(mask)   ((GPIO_Type *)GPIO_BASE_MCUX)->CLR[0] = mask
 
 #define IODBG_SET(pin)   IODBG_SET_MASK(BIT((pin)+IOCON_DBG_PIN))
 #define IODBG_CLR(pin)   IODBG_CLR_MASK(BIT((pin)+IOCON_DBG_PIN))
@@ -346,7 +346,7 @@
 #define ADC_WAIT_TIME_US                           300
 
 /* ADC measurements are done one over gAppADCMeasureCounter wakeup times */
-#ifndef gAppADCMeasureCounter_c 
+#ifndef gAppADCMeasureCounter_c
 #define gAppADCMeasureCounter_c         10
 #endif
 #else

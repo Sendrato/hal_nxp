@@ -5372,11 +5372,11 @@ typedef struct {
 
 /* GPIO - Peripheral instance base addresses */
 /** Peripheral GPIO base address */
-#define GPIO_BASE                                (0x40080000u)
+#define GPIO_BASE_MCUX                           (0x40080000u)
 /** Peripheral GPIO base pointer */
-#define GPIO                                     ((GPIO_Type *)GPIO_BASE)
+#define GPIO                                     ((GPIO_Type *)GPIO_BASE_MCUX)
 /** Array initializer of GPIO peripheral base addresses */
-#define GPIO_BASE_ADDRS                          { GPIO_BASE }
+#define GPIO_BASE_ADDRS                          { GPIO_BASE_MCUX }
 /** Array initializer of GPIO peripheral base pointers */
 #define GPIO_BASE_PTRS                           { GPIO }
 
